@@ -11,7 +11,7 @@ export function middleware(req: NextRequest) {
 
   const isApi = path.startsWith("/api/todos");
   const isTodosPage = path.startsWith("/todos");
-  const isAuthPage = path === "/login" || path === "/register";
+  const isAuthPage = path === "/login" || path === "/register" || path === "/auth/forgot-password" || path === "/auth/reset-password" || path === "/auth/verify-otp";
 
   if (!token) {
     if (isApi)
@@ -39,5 +39,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/api/todos/:path*", "/todos", "/login", "/register", "/api/profile/:path*"],
+  matcher: ["/api/todos/:path*", "/todos", "/login", "/register","/auth/forgot-password","/auth/reset-password","/auth/verify-otp", "/api/profile/:path*"],
 };
