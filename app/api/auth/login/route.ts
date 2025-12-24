@@ -19,6 +19,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "Invalid password" }, { status: 401 });
   }
 
+  if (!user.isVerified) {
+    return NextResponse.json(
+      { message: "Please verify your email" },
+      { status: 401 }
+    );
+  }
+
+
   const token = generateToken({ id: user._id.toString() });
 
   const res = NextResponse.json({ success: true ,message: "Login successful",user,token});

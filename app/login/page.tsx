@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
+import { Eye, EyeOff } from "lucide-react";
 
 // Validation schema
 const LoginSchema = Yup.object().shape({
@@ -13,8 +14,9 @@ const LoginSchema = Yup.object().shape({
 export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
-  // deterministic sparkle positions for SSR-safe rendering
   const sparkles = [
     { left: 15, top: 20, delay: 0, duration: 20 },
     { left: 40, top: 50, delay: 2, duration: 25 },
@@ -30,10 +32,11 @@ export default function Login() {
     { left: 5, top: 5, delay: 22, duration: 75 },
   ];
 
-  // Handle form submission
   const handleLogin = async (values: { email: string; password: string }) => {
     setLoading(true);
     setError(null);
+    setMessage(null);
+
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
@@ -41,12 +44,23 @@ export default function Login() {
         body: JSON.stringify(values),
       });
 
+      const data = await res.json();
+
       if (res.ok) {
-        const data = await res.json();
-        alert(data.message);
-        window.location.href = "/todos";
-      } else {
-        const data = await res.json();
+        setMessage(data.message || "Login successful 🎉");
+
+        // redirect after 2 seconds
+        setTimeout(() => {
+          window.location.href = "/todos";
+        }, 2000);
+      }else if(data.message === "Please verify your email"){
+        // Email not verified → redirect to OTP page
+      setMessage("Please verify your email. Redirecting...");
+      setTimeout(() => {
+        window.location.href = `/auth/verify-otp?email=${encodeURIComponent(values.email)}`;
+      }, 1500);
+      }
+       else {
         setError(data.message || "Invalid credentials");
       }
     } catch {
@@ -55,6 +69,14 @@ export default function Login() {
       setLoading(false);
     }
   };
+
+  // auto-hide message after 4 seconds (optional)
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => setMessage(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
 
   return (
     <>
@@ -96,21 +118,43 @@ export default function Login() {
       {/* Global Animations */}
       <style jsx global>{`
         @keyframes blob {
-          0% { transform: translate(0px, 0px) scale(1); }
-          33% { transform: translate(40px, -60px) scale(1.15); }
-          66% { transform: translate(-30px, 30px) scale(0.9); }
-          100% { transform: translate(0px, 0px) scale(1); }
+          0% {
+            transform: translate(0px, 0px) scale(1);
+          }
+          33% {
+            transform: translate(40px, -60px) scale(1.15);
+          }
+          66% {
+            transform: translate(-30px, 30px) scale(0.9);
+          }
+          100% {
+            transform: translate(0px, 0px) scale(1);
+          }
         }
-        .animate-blob { animation: blob 14s infinite; }
-        .animation-delay-2000 { animation-delay: 2s; }
-        .animation-delay-4000 { animation-delay: 4s; }
+        .animate-blob {
+          animation: blob 14s infinite;
+        }
+        .animation-delay-2000 {
+          animation-delay: 2s;
+        }
+        .animation-delay-4000 {
+          animation-delay: 4s;
+        }
 
         @keyframes float {
-          0% { transform: translateY(0px); }
-          50% { transform: translateY(-40px); }
-          100% { transform: translateY(0px); }
+          0% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-40px);
+          }
+          100% {
+            transform: translateY(0px);
+          }
         }
-        .animate-float { animation: float linear infinite; }
+        .animate-float {
+          animation: float linear infinite;
+        }
       `}</style>
 
       {/* Login Card */}
@@ -126,7 +170,6 @@ export default function Login() {
               </p>
             </div>
 
-            {/* Formik Form */}
             <Formik
               initialValues={{ email: "", password: "" }}
               validationSchema={LoginSchema}
@@ -134,6 +177,7 @@ export default function Login() {
             >
               {({ isSubmitting }) => (
                 <Form className="space-y-6">
+                  {/* Email */}
                   <div>
                     <label className="block text-sm font-semibold text-gray-200 mb-2">
                       Email
@@ -151,16 +195,33 @@ export default function Login() {
                     />
                   </div>
 
-                  <div>
+                  {/* Password */}
+                  <div className="w-full">
                     <label className="block text-sm font-semibold text-gray-200 mb-2">
                       Password
                     </label>
-                    <Field
-                      name="password"
-                      type="password"
-                      placeholder="••••••••"
-                      className="w-full px-6 py-4 rounded-2xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-300 outline-none text-gray-800 text-lg transition-all shadow-sm hover:shadow-md"
-                    />
+
+                    <div className="relative">
+                      <Field
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        className="w-full px-6 py-4 pr-12 rounded-2xl border-2 border-gray-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-300 outline-none text-gray-800 text-lg transition-all shadow-sm"
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute inset-y-0 right-4 flex items-center text-indigo-200"
+                      >
+                        {showPassword ? (
+                          <EyeOff size={28} />
+                        ) : (
+                          <Eye size={28} />
+                        )}
+                      </button>
+                    </div>
+
                     <ErrorMessage
                       name="password"
                       component="div"
@@ -168,6 +229,17 @@ export default function Login() {
                     />
                   </div>
 
+                  {/* Forgot password */}
+                  <div className="flex justify-end text-sm text-gray-200">
+                    <a
+                      href="/auth/forgot-password"
+                      className="hover:underline text-indigo-300 font-semibold"
+                    >
+                      Forgot Password?
+                    </a>
+                  </div>
+
+                  {/* Submit button */}
                   <button
                     type="submit"
                     disabled={isSubmitting || loading}
@@ -176,13 +248,24 @@ export default function Login() {
                     {loading ? "Logging in..." : "Login"}
                   </button>
 
+                  {/* Error message */}
                   {error && (
-                    <p className="text-red-400 text-sm mt-2 text-center">{error}</p>
+                    <p className="text-red-400 text-sm mt-2 text-center">
+                      {error}
+                    </p>
+                  )}
+
+                  {/* Success message */}
+                  {message && (
+                    <p className="text-green-400 text-sm mt-2 text-center bg-green-900/30 border border-green-500/40 rounded-xl py-2 px-3">
+                      {message}
+                    </p>
                   )}
                 </Form>
               )}
             </Formik>
 
+            {/* Sign up */}
             <p className="text-center mt-8 text-gray-300">
               Don’t have an account?{" "}
               <a

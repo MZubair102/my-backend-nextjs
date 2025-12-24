@@ -32,17 +32,24 @@ export default function Register() {
     { left: 5, top: 5, delay: 22, duration: 75 },
   ];
 
-  const handleSubmit = async (values: any, { setSubmitting, setErrors }: any) => {
+  const handleSubmit = async (
+    values: any,
+    { setSubmitting, setErrors }: any
+  ) => {
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });
-
+      const data = await res.json();
       if (res.ok) {
-        alert("Account created successfully!");
-        window.location.href = "/login";
+        alert(data.message || "Account created successfully!");
+        // redirect to verify OTP with email
+        window.location.href = `/auth/verify-otp?email=${encodeURIComponent(
+          values.email
+        )}`;
+        // window.location.href = "/login";
       } else {
         const data = await res.json();
         setErrors({ email: data.message || "Registration failed" });
@@ -94,21 +101,43 @@ export default function Register() {
       {/* Animations */}
       <style jsx global>{`
         @keyframes blob {
-          0% { transform: translate(0px, 0px) scale(1); }
-          33% { transform: translate(40px, -60px) scale(1.15); }
-          66% { transform: translate(-30px, 30px) scale(0.9); }
-          100% { transform: translate(0px, 0px) scale(1); }
+          0% {
+            transform: translate(0px, 0px) scale(1);
+          }
+          33% {
+            transform: translate(40px, -60px) scale(1.15);
+          }
+          66% {
+            transform: translate(-30px, 30px) scale(0.9);
+          }
+          100% {
+            transform: translate(0px, 0px) scale(1);
+          }
         }
-        .animate-blob { animation: blob 14s infinite; }
-        .animation-delay-2000 { animation-delay: 2s; }
-        .animation-delay-4000 { animation-delay: 4s; }
+        .animate-blob {
+          animation: blob 14s infinite;
+        }
+        .animation-delay-2000 {
+          animation-delay: 2s;
+        }
+        .animation-delay-4000 {
+          animation-delay: 4s;
+        }
 
         @keyframes float {
-          0% { transform: translateY(0px); }
-          50% { transform: translateY(-40px); }
-          100% { transform: translateY(0px); }
+          0% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-40px);
+          }
+          100% {
+            transform: translateY(0px);
+          }
         }
-        .animate-float { animation: float linear infinite; }
+        .animate-float {
+          animation: float linear infinite;
+        }
       `}</style>
 
       {/* 💎 Glass Register Card */}
@@ -186,7 +215,10 @@ export default function Register() {
 
             <p className="text-center mt-8 text-gray-300">
               Already have an account?{" "}
-              <a href="/login" className="font-bold text-indigo-300 hover:underline">
+              <a
+                href="/login"
+                className="font-bold text-indigo-300 hover:underline"
+              >
                 Login
               </a>
             </p>

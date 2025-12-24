@@ -22,11 +22,25 @@ const UserSchema = new Schema(
       validate: {
         validator: function (value: string) {
           // At least one uppercase letter and one special character
-          return /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{6,}$/.test(value);
+          return /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{6,}$/.test(
+            value
+          );
         },
         message:
           "Password must contain at least 1 uppercase letter and 1 special character",
       },
+    },
+    isVerified: {
+      type: Boolean,
+      default: false, // user is not verified by default
+    },
+
+    otp: {
+      type: Number,
+    },
+
+    otpValidTill: {
+      type: Date,
     },
   },
   { timestamps: true }
